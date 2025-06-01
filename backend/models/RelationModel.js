@@ -1,6 +1,9 @@
 import db from "../configs/Database.js";
 import Project from "./ProjectModel.js";
 
+Project.hasMany(Funding, { foreignKey: 'project_id' });
+Funding.belongsTo(Project, { foreignKey: 'project_id' });
+
 (async () => {
     try{
         await db.authenticate();
