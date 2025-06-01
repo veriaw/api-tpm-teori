@@ -2,6 +2,7 @@ import Project from '../models/ProjectModel.js';
 import cloudinary from '../configs/Cloudinary.js';
 import streamifier from 'streamifier';
 import { Sequelize } from 'sequelize';
+import Funding from '../models/FundingModel.js';
 
 const ProjectController = {
     async getAllProjects(req, res) {
