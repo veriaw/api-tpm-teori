@@ -130,44 +130,45 @@ const ProjectController = {
     },
 
     async getUserParticipatedProjects(req, res) {
-    try {
-      const userId = req.body; // atau bisa dari auth token
+        const { user_id } = req.body;
 
-      // Cari semua funding yang user ini punya, lalu ambil project-nya
-      const fundings = await Funding.findAll({
-        where: { user_id: userId },
-        attributes: ['project_id'],
-      });
+        try {
+            // Cari funding yang user lakukan, ambil project_id-nya
+            const fundings = await Funding.findAll({
+                where: { user_id },
+                attributes: ['project_id'],
+            });
 
-      const projectIds = fundings.map(f => f.project_id);
+            // Ambil list project_id unik
+            const projectIds = [...new Set(fundings.map(f => f.project_id))];
 
-      if (projectIds.length === 0) {
-        return res.status(200).json({ projects: [] }); // user belum ikut project apa pun
-      }
+            if (projectIds.length === 0) {
+                return res.status(200).json({ projects: [] });
+            }
 
-      // Ambil detail semua project yang ada di list projectIds, plus total_donations seperti sebelumnya
-      const projects = await Project.findAll({
-        where: { project_id: projectIds },
-        attributes: {
-          include: [
-            [
-              Sequelize.literal(`(
-                SELECT COALESCE(SUM(amount), 0)
-                FROM Fundings
-                WHERE Fundings.project_id = Project.project_id
-              )`),
-              'total_donations'
-            ]
-          ]
+            // Cari project berdasarkan projectIds tersebut, dan hitung total donasi
+            const projects = await Project.findAll({
+                where: { project_id: projectIds },
+                attributes: {
+                    include: [
+                        [
+                            Sequelize.literal(`(
+              SELECT COALESCE(SUM(amount), 0)
+              FROM Fundings
+              WHERE Fundings.project_id = Project.project_id
+            )`),
+                            'total_donations'
+                        ]
+                    ]
+                }
+            });
+
+            res.status(200).json({ projects });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Gagal mengambil project partisipasi', error: error.message });
         }
-      });
-
-      return res.status(200).json({ projects });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Gagal mengambil project partisipasi', error: error.message });
     }
-  }
 };
 
 export default ProjectController;
