@@ -9,6 +9,7 @@ const router = express.Router();
 router.get("/get-project", ProjectController.getAllProjects);
 router.post("/create-project", upload.single("image"), ProjectController.createProject);
 router.put("/update-project",upload.single("image"), ProjectController.updateProject);
+router.post("/participated-project", ProjectController.getUserParticipatedProjects);
 // Tambahkan jika ingin ambil semua project dan total funding
 // router.get("/all-projects", ProjectController.getAllProjects);
 
