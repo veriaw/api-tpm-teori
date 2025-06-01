@@ -1,4 +1,5 @@
 import db from "../configs/Database.js";
+import Funding from "./FundingModel.js";
 import Project from "./ProjectModel.js";
 
 Project.hasMany(Funding, { foreignKey: 'project_id' });
