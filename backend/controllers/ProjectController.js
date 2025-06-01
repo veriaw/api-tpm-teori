@@ -1,0 +1,132 @@
+import Project from '../models/ProjectModel.js';
+import cloudinary from '../configs/Cloudinary.js';
+import streamifier from 'streamifier';
+import { Sequelize } from 'sequelize';
+
+const ProjectController = {
+    async getAllProjects(req, res) {
+        try {
+            const projects = await Project.findAll({
+                attributes: {
+                    include: [
+                        // Hitung total donasi dari Funding dengan SUM(amount)
+                        [
+                            Sequelize.literal(`(
+              SELECT COALESCE(SUM(amount), 0)
+              FROM Fundings
+              WHERE Fundings.project_id = Project.project_id
+            )`),
+                            'total_donations'
+                        ]
+                    ]
+                }
+            });
+
+            res.status(200).json({ projects });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Gagal mengambil data project', error: error.message });
+        }
+    },
+
+    // 🟢 Tambah project baru
+    async createProject(req, res) {
+        const {
+            user_id,
+            title,
+            description,
+            target_amount,
+            deadline,
+            latitude,
+            longitude,
+        } = req.body;
+
+
+        try {
+            let img_url = null;
+
+            // Upload gambar jika ada file
+            if (req.file) {
+                const result = await new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        { folder: 'funding_project' },
+                        (error, result) => {
+                            if (error) reject(error);
+                            else resolve(result);
+                        }
+                    );
+                    streamifier.createReadStream(req.file.buffer).pipe(stream);
+                });
+                img_url = result.secure_url;
+            }
+
+            const newProject = await Project.create({
+                user_id,
+                title,
+                description,
+                target_amount,
+                deadline,
+                latitude,
+                longitude,
+                img_url,
+                status: 'active',
+            });
+
+            res.status(201).json({ message: 'Project created successfully', project: newProject });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Failed to create project', error: error.message });
+        }
+    },
+
+    // ✏️ Edit project (hanya owner yang boleh)
+    async updateProject(req, res) {
+        try {
+            const { user_id, project_id } = req.body;
+            console.log(`apakah ${user_id} sama dengan ${project_id}`);
+            // Cari project dulu untuk cek ownership dan keberadaan
+            const project = await Project.findByPk(project_id);
+            if (!project) return res.status(404).json({ message: 'Project tidak ditemukan' });
+            if (project.user_id != user_id) return res.status(403).json({ message: 'Unauthorized' });
+
+            // Kumpulkan data yang ingin diupdate
+            const updateData = {};
+            const fieldsToUpdate = ['title', 'description', 'target_amount', 'deadline', 'latitude', 'longitude'];
+
+            fieldsToUpdate.forEach(field => {
+                if (req.body[field] !== undefined) {
+                    updateData[field] = req.body[field];
+                }
+            });
+
+            // Jika ada file image, upload ke Cloudinary
+            if (req.file) {
+                const result = await new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        { folder: 'funding_project' },
+                        (error, result) => {
+                            if (error) reject(error);
+                            else resolve(result);
+                        }
+                    );
+                    streamifier.createReadStream(req.file.buffer).pipe(stream);
+                });
+                updateData.img_url = result.secure_url;
+            }
+
+            // Jalankan update dengan Sequelize update
+            await Project.update(updateData, { where: { project_id } });
+
+            // Ambil data project terbaru setelah update
+            const updatedProject = await Project.findByPk(project_id);
+
+            res.status(200).json({ message: 'Project berhasil diperbarui', project: updatedProject });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Gagal update project', error: error.message });
+        }
+    }
+};
+
+export default ProjectController;
