@@ -168,6 +168,62 @@ const ProjectController = {
             console.error(error);
             res.status(500).json({ message: 'Gagal mengambil project partisipasi', error: error.message });
         }
+    },
+
+    async getProjectById(req, res) {
+        const { project_id } = req.body;
+
+        try {
+            const project = await Project.findOne({
+                where: { project_id },
+                attributes: {
+                    include: [
+                        [
+                            Sequelize.literal(`(
+                            SELECT COALESCE(SUM(amount), 0)
+                            FROM Fundings
+                            WHERE Fundings.project_id = Project.project_id
+                        )`),
+                            'total_donations'
+                        ]
+                    ]
+                }
+            });
+
+            if (!project) {
+                return res.status(404).json({ message: 'Project tidak ditemukan' });
+            }
+
+            res.status(200).json({ project });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Gagal mengambil project', error: error.message });
+        }
+    },
+
+    async getAllLatestProjects(req, res) {
+        try {
+            const projects = await Project.findAll({
+                attributes: {
+                    include: [
+                        [
+                            Sequelize.literal(`(
+                            SELECT COALESCE(SUM(amount), 0)
+                            FROM Fundings
+                            WHERE Fundings.project_id = Project.project_id
+                        )`),
+                            'total_donations'
+                        ]
+                    ]
+                },
+                order: [['created_at', 'DESC']] // 🔽 urutkan berdasarkan yang terbaru
+            });
+
+            res.status(200).json({ projects });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Gagal mengambil data project', error: error.message });
+        }
     }
 };
 
