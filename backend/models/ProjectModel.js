@@ -24,12 +24,12 @@ const Project = db.define('Project', {
     allowNull: false
   },
   start_date: {
-    type: DataTypes.DATEONLY,
+    type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW // otomatis isi tanggal saat dibuat
   },
   deadline: {
-    type: DataTypes.DATEONLY,
+    type: DataTypes.DATE,
     allowNull: false
   },
   latitude: {
