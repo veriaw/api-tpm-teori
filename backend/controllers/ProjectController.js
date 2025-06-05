@@ -93,7 +93,7 @@ const ProjectController = {
 
             // Kumpulkan data yang ingin diupdate
             const updateData = {};
-            const fieldsToUpdate = ['title', 'description', 'target_amount', 'deadline', 'latitude', 'longitude'];
+            const fieldsToUpdate = ['title', 'description', 'target_amount', 'deadline', 'latitude', 'longitude', 'status'];
 
             fieldsToUpdate.forEach(field => {
                 if (req.body[field] !== undefined) {
