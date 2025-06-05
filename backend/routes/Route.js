@@ -9,7 +9,7 @@ const router = express.Router();
 router.get("/get-project", ProjectController.getAllProjects);
 router.get("/get-latest-project", ProjectController.getAllLatestProjects);
 router.post("/project", ProjectController.getProjectById);
-router.post("/project/canceled", ProjectController.cancelProject);
+router.post("/projectCanceled", ProjectController.cancelProject);
 router.post("/create-project", upload.single("image"), ProjectController.createProject);
 router.put("/update-project",upload.single("image"), ProjectController.updateProject);
 router.post("/participated-project", ProjectController.getUserParticipatedProjects);
