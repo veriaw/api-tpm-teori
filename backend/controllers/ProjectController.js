@@ -274,7 +274,7 @@ const ProjectController = {
                         ]
                     ]
                 },
-                order: [['createdAt', 'DESC']] // Optional: urutkan dari terbaru
+                order: [['start_date', 'DESC']] // Optional: urutkan dari terbaru
             });
 
             res.status(200).json({ projects });
