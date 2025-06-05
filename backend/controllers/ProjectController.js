@@ -8,6 +8,7 @@ const ProjectController = {
     async getAllProjects(req, res) {
         try {
             const projects = await Project.findAll({
+                where: { status: 'active' },
                 attributes: {
                     include: [
                         // Hitung total donasi dari Funding dengan SUM(amount)
@@ -204,6 +205,7 @@ const ProjectController = {
     async getAllLatestProjects(req, res) {
         try {
             const projects = await Project.findAll({
+                where: { status: 'active' },
                 attributes: {
                     include: [
                         [
