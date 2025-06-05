@@ -226,7 +226,35 @@ const ProjectController = {
             console.error(error);
             res.status(500).json({ message: 'Gagal mengambil data project', error: error.message });
         }
-    }
+    },
+
+    async cancelProject(req, res) {
+        const { project_id, user_id } = req.body;
+
+        try {
+            const project = await Project.findByPk(project_id);
+
+            if (!project) {
+                return res.status(404).json({ message: 'Project tidak ditemukan' });
+            }
+
+            // Pastikan hanya owner yang boleh membatalkan project
+            if (project.user_id != user_id) {
+                return res.status(403).json({ message: 'Unauthorized' });
+            }
+
+            if (project.status === 'canceled') {
+                return res.status(400).json({ message: 'Project sudah dibatalkan sebelumnya' });
+            }
+
+            await project.update({ status: 'canceled' });
+
+            res.status(200).json({ message: 'Project berhasil dibatalkan', project });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Gagal membatalkan project', error: error.message });
+        }
+    },
 };
 
 export default ProjectController;
