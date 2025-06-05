@@ -255,6 +255,34 @@ const ProjectController = {
             res.status(500).json({ message: 'Gagal membatalkan project', error: error.message });
         }
     },
+
+    async getAllProjectsByUserId(req, res) {
+        const { user_id } = req.body;
+
+        try {
+            const projects = await Project.findAll({
+                where: { user_id },
+                attributes: {
+                    include: [
+                        [
+                            Sequelize.literal(`(
+                            SELECT COALESCE(SUM(amount), 0)
+                            FROM Fundings
+                            WHERE Fundings.project_id = Project.project_id
+                        )`),
+                            'total_donations'
+                        ]
+                    ]
+                },
+                order: [['createdAt', 'DESC']] // Optional: urutkan dari terbaru
+            });
+
+            res.status(200).json({ projects });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Gagal mengambil project milik user', error: error.message });
+        }
+    }
 };
 
 export default ProjectController;
